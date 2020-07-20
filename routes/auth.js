@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express.Router();
 var User = require('../model/User')
-var { registerValidation } = require("../validation")
+var { registerValidation, loginValidation } = require("../validation")
 var bcrypt = require('bcryptjs')
 
 router.post('/register',async (req,res)=>{
@@ -16,8 +16,8 @@ router.post('/register',async (req,res)=>{
 
     //Check already exxisting user
     console.log('Reached check')
-    // var emailExist = await User.findOne({email:req.body.email})
-    // if(emailExist) return res.status(400).send('Email already exists')
+    var emailExist = await User.findOne({email:req.body.email})
+    if(emailExist) return res.status(400).send('Email already exists')
     console.log('Reached checked')
 
     //Hashing
@@ -42,8 +42,15 @@ router.post('/register',async (req,res)=>{
     }
  })
 
-// router.post('/login',(req,res)=>{
+router.post('/login',async (req,res)=>{
+    var {error} = loginValidation(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+    var user = await User.findOne({email:req.body.email})
+    if(!user) return res.status(400).send('Email doesnt exists')
+    var validPass = await bcrypt.compare(req.body.password, user.password)
+    if(!validPass) return res.status(400).send('Invalid Pass')
 
-// })
+    res.send('Successfully Logged in')
+}) 
 
 module.exports = router;
