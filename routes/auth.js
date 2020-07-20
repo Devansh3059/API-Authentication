@@ -1,32 +1,41 @@
 var express = require("express");
 var router = express.Router();
 var User = require('../model/User')
-
-//var
-var Joi = require('@hapi/joi');
-
-var schema = Joi.object({
-    name:Joi.string().min(6).required(),
-    email:Joi.string().min(6).required().email(),
-    password:Joi.string().min(6).required()
-
-})
+var { registerValidation } = require("../validation")
+var bcrypt = require('bcryptjs')
 
 router.post('/register',async (req,res)=>{
 
     //Validating user
-    var {error} = schema.validate(req.body);
+    console.log('Reached validation')
+    var {error} = registerValidation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
+    console.log('Reached validated')
     // if(validation)
     // res.send(validation)
 
+    //Check already exxisting user
+    console.log('Reached check')
+    // var emailExist = await User.findOne({email:req.body.email})
+    // if(emailExist) return res.status(400).send('Email already exists')
+    console.log('Reached checked')
+
+    //Hashing
+    var salt = await bcrypt.genSalt(10);
+    var hashPass = await bcrypt.hash(req.body.password, salt);
+    console.log('Reached hash')
+
+
+    //Create New User
     var user = new User({
         name:req.body.name,
         email:req.body.email,
-        password:req.body.password
+        password:hashPass
     });
     try{
+        console.log('Reached save')
         var savedUser = await user.save();
+        console.log('Reached saved')
         res.send(savedUser);
     }catch(err){
         res.status(400).send(err)
