@@ -14,7 +14,9 @@ mongoose.connect(process.env.DB_CONNECT,
 app.use(express.json())
 
 var authRoute = require("./routes/auth");
-app.use('/api/user',authRoute);  
+var postRoute = require("./routes/posts");
+app.use('/api/user',authRoute);
+app.use('/api/posts',postRoute);
 
 app.listen(5500,()=>{
     console.log("API Authentication Running")
